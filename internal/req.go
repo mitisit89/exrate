@@ -36,6 +36,5 @@ func GetRate(currencyСode string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Println(data.Valute[currencyСode])
+	fmt.Println(data.Valute[currencyСode].Name, data.Valute[currencyСode].Value)
 }
