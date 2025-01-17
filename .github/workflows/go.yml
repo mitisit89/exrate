@@ -11,15 +11,24 @@ on:
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
+   build:
+    name: Build
+    strategy:
+      matrix:
+        go: [ 'stable', '1.20.x' ]
+        os: [ ubuntu-latest ]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23'
-
-    - name: Build
-      run: go build -v ./...
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+          cache-dependency-path: go.sum
