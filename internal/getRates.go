@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/carlmjohnson/requests"
 )
@@ -27,7 +28,7 @@ type data struct {
 	Valute       map[string]currency `json:"Valute"`
 }
 
-func GetRate(currencyСode string) {
+func GetRate(currencyСodes []string) {
 	var data data
 	err := requests.
 		URL(apiUrl).
@@ -36,5 +37,8 @@ func GetRate(currencyСode string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(data.Valute[currencyСode].Name, data.Valute[currencyСode].Value)
+	for _, v := range currencyСodes {
+		v = strings.ToUpper(v)
+		fmt.Println(data.Valute[v].Name, data.Valute[v].Value)
+	}
 }

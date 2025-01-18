@@ -6,7 +6,6 @@ package cmd
 import (
 	"exrate/internal"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +15,7 @@ var exrateCmd = &cobra.Command{
 	Short: "cli util to get exchange rates",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		internal.GetRate(strings.ToUpper(args[0]))
+		internal.GetRate(args)
 
 	},
 }
