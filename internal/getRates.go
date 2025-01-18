@@ -54,6 +54,6 @@ func GetRate(currencyСodes []string) {
 			}
 		}
 	}
-
+	fmt.Println("Date: ", data.Date)
 	fmt.Println(t.Render())
 }
