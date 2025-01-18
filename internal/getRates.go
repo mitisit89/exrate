@@ -1,44 +1,59 @@
 package internal
 
 import (
-	"context"
+	"encoding/xml"
 	"fmt"
 	"strings"
 
-	"github.com/carlmjohnson/requests"
+	"github.com/go-resty/resty/v2"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"golang.org/x/net/html/charset"
 )
 
-var apiUrl string = "https://www.cbr-xml-daily.ru/daily_json.js"
+var apiUrl string = "https://cbr.ru/scripts/XML_daily.asp"
 
-type currency struct {
-	ID       string  `json:"ID"`
-	NumCode  string  `json:"NumCode"`
-	CharCode string  `json:"CharCode"`
-	Nominal  int     `json:"Nominal"`
-	Name     string  `json:"Name"`
-	Value    float64 `json:"Value"`
-	Previous float64 `json:"Previous"`
+// Valute represents each currency in the XML
+type valute struct {
+	ID        string `xml:"ID,attr"`
+	NumCode   int    `xml:"NumCode"`
+	CharCode  string `xml:"CharCode"`
+	Nominal   int    `xml:"Nominal"`
+	Name      string `xml:"Name"`
+	Value     string `xml:"Value"`
+	VunitRate string `xml:"VunitRate,omitempty"` // Optional field
 }
 
-type data struct {
-	Date         string              `json:"Date"`
-	PreviousDate string              `json:"PreviousDate"`
-	PreviousURL  string              `json:"PreviousURL"`
-	Timestamp    string              `json:"Timestamp"`
-	Valute       map[string]currency `json:"Valute"`
+type currency struct {
+	XMLName xml.Name `xml:"ValCurs"`
+	Date    string   `xml:"Date,attr"`
+	Name    string   `xml:"name,attr"`
+	Valutes []valute `xml:"Valute"`
 }
 
 func GetRate(currencyСodes []string) {
-	var data data
-	err := requests.
-		URL(apiUrl).
-		ToJSON(&data).
-		Fetch(context.Background())
+	var data currency
+
+	response, err := resty.New().R().
+		Get(apiUrl)
 	if err != nil {
 		fmt.Println(err)
 	}
-	for _, v := range currencyСodes {
-		v = strings.ToUpper(v)
-		fmt.Println(data.Valute[v].Name, data.Valute[v].Value)
+	reader := strings.NewReader(response.String())
+	decoder := xml.NewDecoder(reader)
+	decoder.CharsetReader = charset.NewReaderLabel
+	if err := decoder.Decode(&data); err != nil {
+		fmt.Println(err)
 	}
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"name", "value"})
+
+	for _, v := range data.Valutes {
+		for _, code := range currencyСodes {
+			if v.CharCode == strings.ToUpper(code) {
+				t.AppendRow(table.Row{v.Name, v.Value})
+			}
+		}
+	}
+
+	fmt.Println(t.Render())
 }
